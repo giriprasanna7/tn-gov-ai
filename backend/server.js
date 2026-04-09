@@ -6,7 +6,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-/* test route */
+/* root route */
 app.get("/", (req, res) => {
     res.send("TN GOV AI Backend Running Successfully");
 });
@@ -44,7 +44,6 @@ app.post("/recommend", (req, res) => {
 
 });
 
-/* start server */
 app.listen(5000, () => {
     console.log("Server running on port 5000");
 });
