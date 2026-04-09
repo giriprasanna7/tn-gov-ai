@@ -6,6 +6,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+/* test route */
+app.get("/", (req, res) => {
+    res.send("TN GOV AI Backend Running Successfully");
+});
+
+/* recommendation API */
 app.post("/recommend", (req, res) => {
 
     const { name, age, occupation, gender, scheme } = req.body;
@@ -16,7 +22,7 @@ app.post("/recommend", (req, res) => {
         recommendation = "Recommended: Tamil Nadu Farmer Subsidy Scheme";
     }
 
-    else if (gender === "female") {
+    else if (gender.toLowerCase() === "female") {
         recommendation = "Recommended: Moovalur Ramamirtham Marriage Scheme";
     }
 
@@ -38,6 +44,7 @@ app.post("/recommend", (req, res) => {
 
 });
 
+/* start server */
 app.listen(5000, () => {
     console.log("Server running on port 5000");
 });
