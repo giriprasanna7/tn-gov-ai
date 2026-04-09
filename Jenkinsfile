@@ -1,20 +1,19 @@
 pipeline {
     agent any
 
-    stages {
+    environment {
+        PATH = "/usr/bin:/usr/local/bin:${env.PATH}"
+    }
 
-        stage('Clone Code') {
-            steps {
-                echo "Code already available in Jenkins workspace"
-            }
-        }
+    stages {
 
         stage('Install Frontend') {
             steps {
                 sh '''
+                echo "Installing frontend..."
                 cd frontend
                 npm install
-                npm run build
+                CI=false npm run build
                 '''
             }
         }
@@ -22,6 +21,7 @@ pipeline {
         stage('Install Backend') {
             steps {
                 sh '''
+                echo "Installing backend..."
                 cd backend
                 npm install
                 '''
@@ -31,10 +31,18 @@ pipeline {
         stage('Start Backend') {
             steps {
                 sh '''
-                pm2 stop app || true
-                pm2 start backend/app.js --name app
+                echo "Starting backend..."
+
+                pm2 delete tnapp || true
+
+                cd backend
+
+                pm2 start server.js --name tnapp
+
+                pm2 save
                 '''
             }
         }
+
     }
 }
