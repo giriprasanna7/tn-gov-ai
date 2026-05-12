@@ -5,7 +5,8 @@ pipeline {
 
         stage('Clone Repository') {
             steps {
-                git 'https://github.com/giriprasanna7/tn-gov-ai.git'
+                git branch: 'main',
+                url: 'https://github.com/giriprasanna7/tn-gov-ai.git'
             }
         }
 
@@ -38,10 +39,6 @@ pipeline {
                 scp -r * ubuntu@13.51.162.22:~/tn-gov-ai
 
                 ssh ubuntu@13.51.162.22 "
-                    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-                    sudo apt install -y nodejs
-                    sudo npm install -g pm2 serve
-
                     cd ~/tn-gov-ai/frontend
                     npm install
                     npm run build
