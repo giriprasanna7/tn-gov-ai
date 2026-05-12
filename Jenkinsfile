@@ -3,37 +3,60 @@ pipeline {
 
     stages {
 
-        stage('Install Frontend') {
+        stage('Clone Repository') {
+            steps {
+                git 'https://github.com/giriprasanna7/tn-gov-ai.git'
+            }
+        }
+
+        stage('Build Frontend') {
             steps {
                 sh '''
-                echo Installing frontend...
                 cd frontend
                 npm install
-                CI=false npm run build
+                npm run build
                 '''
             }
         }
 
-        stage('Install Backend') {
+        stage('Install Backend Packages') {
             steps {
                 sh '''
-                echo Installing backend...
                 cd backend
                 npm install
                 '''
             }
         }
 
-        stage('Start Backend') {
+        stage('Deploy To TN-gov Server') {
             steps {
                 sh '''
-                echo Starting backend...
+                ssh ubuntu@13.51.162.22 "
+                    rm -rf ~/tn-gov-ai
+                "
 
-                /usr/bin/pm2 delete tnapp || true
+                scp -r * ubuntu@13.51.162.22:~/tn-gov-ai
 
-                cd backend
+                ssh ubuntu@13.51.162.22 "
+                    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+                    sudo apt install -y nodejs
+                    sudo npm install -g pm2 serve
 
-                /usr/bin/pm2 start server.js --name tnapp
+                    cd ~/tn-gov-ai/frontend
+                    npm install
+                    npm run build
+
+                    pm2 delete frontend || true
+                    pm2 serve build 3000 --name frontend --spa
+
+                    cd ~/tn-gov-ai/backend
+                    npm install
+
+                    pm2 delete backend || true
+                    pm2 start server.js --name backend
+
+                    pm2 save
+                "
                 '''
             }
         }
