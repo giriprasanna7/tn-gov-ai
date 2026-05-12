@@ -1,16 +1,12 @@
 pipeline {
     agent any
 
-    environment {
-        PATH = "/usr/bin:/usr/local/bin:${env.PATH}"
-    }
-
     stages {
 
         stage('Install Frontend') {
             steps {
                 sh '''
-                echo "Installing frontend..."
+                echo Installing frontend...
                 cd frontend
                 npm install
                 CI=false npm run build
@@ -21,7 +17,7 @@ pipeline {
         stage('Install Backend') {
             steps {
                 sh '''
-                echo "Installing backend..."
+                echo Installing backend...
                 cd backend
                 npm install
                 '''
@@ -31,18 +27,15 @@ pipeline {
         stage('Start Backend') {
             steps {
                 sh '''
-                echo "Starting backend..."
+                echo Starting backend...
 
-                pm2 delete tnapp || true
+                /usr/bin/pm2 delete tnapp || true
 
                 cd backend
 
-                pm2 start server.js --name tnapp
-
-                pm2 save
+                /usr/bin/pm2 start server.js --name tnapp
                 '''
             }
         }
-
     }
 }
