@@ -1,61 +1,34 @@
-pipeline {
-    agent any
+stage('Deploy To Hosting Server') {
+    steps {
+        sh '''
+        ssh ubuntu@16.171.67.178 "
+            rm -rf ~/tn-gov-ai
+        "
 
-    stages {
+        scp -r * ubuntu@16.171.67.178:~/tn-gov-ai
 
-        stage('Clone Repository') {
-            steps {
-                git branch: 'main',
-                url: 'https://github.com/giriprasanna7/tn-gov-ai.git'
-            }
-        }
+        ssh ubuntu@16.171.67.178 "
+            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+            sudo apt install -y nodejs git
+            sudo npm install -g pm2 serve
 
-        stage('Build Frontend') {
-            steps {
-                sh '''
-                cd frontend
-                npm install
-                npm run build
-                '''
-            }
-        }
+            cd ~/tn-gov-ai/frontend
 
-        stage('Install Backend Packages') {
-            steps {
-                sh '''
-                cd backend
-                npm install
-                '''
-            }
-        }
+            npm install
+            npm run build
 
-        stage('Deploy To TN-gov Server') {
-            steps {
-                sh '''
-                ssh ubuntu@13.51.162.22 "
-                    rm -rf ~/tn-gov-ai
-                "
+            pm2 delete frontend || true
+            pm2 serve build 3000 --name frontend --spa
 
-                scp -r * ubuntu@13.51.162.22:~/tn-gov-ai
+            cd ~/tn-gov-ai/backend
 
-                ssh ubuntu@13.51.162.22 "
-                    cd ~/tn-gov-ai/frontend
-                    npm install
-                    npm run build
+            npm install
 
-                    pm2 delete frontend || true
-                    pm2 serve build 3000 --name frontend --spa
+            pm2 delete backend || true
+            pm2 start server.js --name backend
 
-                    cd ~/tn-gov-ai/backend
-                    npm install
-
-                    pm2 delete backend || true
-                    pm2 start server.js --name backend
-
-                    pm2 save
-                "
-                '''
-            }
-        }
+            pm2 save
+        "
+        '''
     }
 }
