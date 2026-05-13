@@ -1,34 +1,67 @@
-stage('Deploy To Hosting Server') {
-    steps {
-        sh '''
-        ssh ubuntu@16.171.67.178 "
-            rm -rf ~/tn-gov-ai
-        "
+pipeline {
+    agent any
 
-        scp -r * ubuntu@16.171.67.178:~/tn-gov-ai
+    stages {
 
-        ssh ubuntu@16.171.67.178 "
-            curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-            sudo apt install -y nodejs git
-            sudo npm install -g pm2 serve
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main',
+                url: 'https://github.com/giriprasanna7/tn-gov-ai.git'
+            }
+        }
 
-            cd ~/tn-gov-ai/frontend
+        stage('Build Frontend') {
+            steps {
+                sh '''
+                cd frontend
+                npm install
+                npm run build
+                '''
+            }
+        }
 
-            npm install
-            npm run build
+        stage('Install Backend Packages') {
+            steps {
+                sh '''
+                cd backend
+                npm install
+                '''
+            }
+        }
 
-            pm2 delete frontend || true
-            pm2 serve build 3000 --name frontend --spa
+        stage('Deploy To Hosting Server') {
+            steps {
+                sh '''
+                ssh -o StrictHostKeyChecking=no ubuntu@16.171.67.178 "
+                    rm -rf ~/tn-gov-ai
+                "
 
-            cd ~/tn-gov-ai/backend
+                scp -o StrictHostKeyChecking=no -r * ubuntu@16.171.67.178:~/tn-gov-ai
 
-            npm install
+                ssh -o StrictHostKeyChecking=no ubuntu@16.171.67.178 "
+                    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+                    sudo apt install -y nodejs git
+                    sudo npm install -g pm2 serve
 
-            pm2 delete backend || true
-            pm2 start server.js --name backend
+                    cd ~/tn-gov-ai/frontend
 
-            pm2 save
-        "
-        '''
+                    npm install
+                    npm run build
+
+                    pm2 delete frontend || true
+                    pm2 serve build 3000 --name frontend --spa
+
+                    cd ~/tn-gov-ai/backend
+
+                    npm install
+
+                    pm2 delete backend || true
+                    pm2 start server.js --name backend
+
+                    pm2 save
+                "
+                '''
+            }
+        }
     }
 }
